@@ -5,6 +5,8 @@ image:
   repository: registry.k8s.io/kwok/kwok
   # -- Overrides the image tag whose default is {{ .Chart.AppVersion }}.
   tag: ""
+  # -- Image digest, for example `sha256:...`. When set, it pins the image and takes precedence over `tag`.
+  digest: ""
 
 # -- Image pull secrets.
 imagePullSecrets: []
@@ -14,6 +16,11 @@ nameOverride: ""
 
 # -- Override the `fullname` of the chart.
 fullnameOverride: "kwok-controller"
+
+# -- Annotations added to the kwok pod.
+podAnnotations: {}
+# -- Labels added to the kwok pod.
+podLabels: {}
 
 podSecurityContext: {}
 securityContext: {}
@@ -46,3 +53,8 @@ env:
       fieldPath: status.hostIP
 volumeMounts: []
 enableDeployment: true
+
+# -- Overrides merged into the default KwokConfiguration from `conf/kwok.yaml`, for example
+# `options.manageAllNodes: true`. Lists, such as `enableCRDs`, replace the default.
+# Changing it restarts the kwok pod.
+config: {}

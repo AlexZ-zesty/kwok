@@ -51,6 +51,24 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+Container image reference, pinned by digest when one is set
+*/}}
+{{- define "kwok.image" -}}
+{{- if .Values.image.digest }}
+{{- printf "%s@%v" .Values.image.repository .Values.image.digest }}
+{{- else }}
+{{- printf "%s:%v" .Values.image.repository (.Values.image.tag | default .Chart.AppVersion) }}
+{{- end }}
+{{- end }}
+
+{{/*
+KwokConfiguration mounted into the kwok container
+*/}}
+{{- define "kwok.config" -}}
+{{- mergeOverwrite ($.Files.Get "conf/kwok.yaml" | fromYaml) (.Values.config | default dict) | toYaml }}
+{{- end }}
+
+{{/*
 Create the name of the service account to use
 */}}
 {{- define "kwok.serviceAccountName" -}}

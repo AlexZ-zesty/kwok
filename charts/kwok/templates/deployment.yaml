@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "kwok.fullname" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "kwok.labels" . | nindent 4 }}
 spec:
@@ -12,8 +13,16 @@ spec:
       {{- include "kwok.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      annotations:
+        checksum/config: {{ include "kwok.config" . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       labels:
         {{- include "kwok.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -27,7 +36,7 @@ spec:
       restartPolicy: Always
       containers:
       - name: {{ .Chart.Name }}
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        image: {{ include "kwok.image" . | quote }}
         args:
         - --config=/root/.kwok/kwok.yaml
         - --node-ip=$(POD_IP)

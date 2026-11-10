@@ -23,7 +23,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"sigs.k8s.io/kwok/pkg/apis/internalversion"
 	"sigs.k8s.io/kwok/pkg/consts"
@@ -76,7 +75,7 @@ func expendExtrasForBuildKind(conf BuildKindConfig) (BuildKindConfig, error) {
 		conf.ApiserverExtraArgs = append(conf.ApiserverExtraArgs,
 			internalversion.ExtraArgs{
 				Key:   "audit-policy-file",
-				Value: "/etc/kubernetes/audit/audit.yaml",
+				Value: new("/etc/kubernetes/audit/audit.yaml"),
 			},
 		)
 		conf.ApiserverExtraVolumes = append(conf.ApiserverExtraVolumes,
@@ -93,7 +92,7 @@ func expendExtrasForBuildKind(conf BuildKindConfig) (BuildKindConfig, error) {
 			conf.ApiserverExtraArgs = append(conf.ApiserverExtraArgs,
 				internalversion.ExtraArgs{
 					Key:   "audit-log-path",
-					Value: "/var/log/kubernetes/audit.log",
+					Value: new("/var/log/kubernetes/audit.log"),
 				},
 			)
 			conf.ApiserverExtraVolumes = append(conf.ApiserverExtraVolumes,
@@ -112,7 +111,7 @@ func expendExtrasForBuildKind(conf BuildKindConfig) (BuildKindConfig, error) {
 		conf.SchedulerExtraArgs = append(conf.SchedulerExtraArgs,
 			internalversion.ExtraArgs{
 				Key:   "config",
-				Value: "/etc/kubernetes/scheduler/scheduler.yaml",
+				Value: new("/etc/kubernetes/scheduler/scheduler.yaml"),
 			},
 		)
 
@@ -131,7 +130,7 @@ func expendExtrasForBuildKind(conf BuildKindConfig) (BuildKindConfig, error) {
 		conf.ApiserverExtraArgs = append(conf.ApiserverExtraArgs,
 			internalversion.ExtraArgs{
 				Key:   "tracing-config-file",
-				Value: "/etc/kubernetes/apiserver-tracing-config.yaml",
+				Value: new("/etc/kubernetes/apiserver-tracing-config.yaml"),
 			},
 		)
 		conf.ApiserverExtraVolumes = append(conf.ApiserverExtraVolumes,
@@ -154,15 +153,15 @@ func expendExtrasForBuildKind(conf BuildKindConfig) (BuildKindConfig, error) {
 		conf.EtcdExtraArgs = append(conf.EtcdExtraArgs,
 			internalversion.ExtraArgs{
 				Key:   "experimental-enable-distributed-tracing",
-				Value: "true",
+				Value: new("true"),
 			},
 			internalversion.ExtraArgs{
 				Key:   "experimental-distributed-tracing-address",
-				Value: "127.0.0.1:4317",
+				Value: new("127.0.0.1:4317"),
 			},
 			internalversion.ExtraArgs{
 				Key:   "experimental-distributed-tracing-sampling-rate",
-				Value: "1000000",
+				Value: new("1000000"),
 			},
 		)
 	}
@@ -173,25 +172,25 @@ func expendExtrasForBuildKind(conf BuildKindConfig) (BuildKindConfig, error) {
 		conf.EtcdExtraArgs = append(conf.EtcdExtraArgs,
 			internalversion.ExtraArgs{
 				Key:   "log-level",
-				Value: sl,
+				Value: new(sl),
 			},
 		)
 		conf.ApiserverExtraArgs = append(conf.ApiserverExtraArgs,
 			internalversion.ExtraArgs{
 				Key:   "v",
-				Value: v,
+				Value: new(v),
 			},
 		)
 		conf.ControllerManagerExtraArgs = append(conf.ControllerManagerExtraArgs,
 			internalversion.ExtraArgs{
 				Key:   "v",
-				Value: v,
+				Value: new(v),
 			},
 		)
 		conf.SchedulerExtraArgs = append(conf.SchedulerExtraArgs,
 			internalversion.ExtraArgs{
 				Key:   "v",
-				Value: v,
+				Value: new(v),
 			},
 		)
 	}
@@ -200,11 +199,11 @@ func expendExtrasForBuildKind(conf BuildKindConfig) (BuildKindConfig, error) {
 		conf.ApiserverExtraArgs = append(conf.ApiserverExtraArgs,
 			internalversion.ExtraArgs{
 				Key:   "max-requests-inflight",
-				Value: "0",
+				Value: new("0"),
 			},
 			internalversion.ExtraArgs{
 				Key:   "max-mutating-requests-inflight",
-				Value: "0",
+				Value: new("0"),
 			},
 		)
 
@@ -213,28 +212,28 @@ func expendExtrasForBuildKind(conf BuildKindConfig) (BuildKindConfig, error) {
 			conf.ApiserverExtraArgs = append(conf.ApiserverExtraArgs,
 				internalversion.ExtraArgs{
 					Key:   "enable-priority-and-fairness",
-					Value: "false",
+					Value: new("false"),
 				},
 			)
 		}
 		conf.ControllerManagerExtraArgs = append(conf.ControllerManagerExtraArgs,
 			internalversion.ExtraArgs{
 				Key:   "kube-api-qps",
-				Value: format.String(consts.DefaultUnlimitedQPS),
+				Value: new(format.String(consts.DefaultUnlimitedQPS)),
 			},
 			internalversion.ExtraArgs{
 				Key:   "kube-api-burst",
-				Value: format.String(consts.DefaultUnlimitedBurst),
+				Value: new(format.String(consts.DefaultUnlimitedBurst)),
 			},
 		)
 		conf.SchedulerExtraArgs = append(conf.SchedulerExtraArgs,
 			internalversion.ExtraArgs{
 				Key:   "kube-api-qps",
-				Value: format.String(consts.DefaultUnlimitedQPS),
+				Value: new(format.String(consts.DefaultUnlimitedQPS)),
 			},
 			internalversion.ExtraArgs{
 				Key:   "kube-api-burst",
-				Value: format.String(consts.DefaultUnlimitedBurst),
+				Value: new(format.String(consts.DefaultUnlimitedBurst)),
 			},
 		)
 	}
@@ -253,7 +252,7 @@ func expendExtrasForBuildKind(conf BuildKindConfig) (BuildKindConfig, error) {
 		conf.EtcdExtraArgs = append(conf.EtcdExtraArgs,
 			internalversion.ExtraArgs{
 				Key:   "quota-backend-bytes",
-				Value: strconv.FormatInt(etcdQuotaBackendSize, 10),
+				Value: new(strconv.FormatInt(etcdQuotaBackendSize, 10)),
 			},
 		)
 	}
@@ -451,11 +450,14 @@ func buildKindConfigV1alpha4(conf BuildKindConfig) (*kindv1alpha4.Cluster, error
 	featureGates := map[string]bool{}
 	for _, fg := range conf.FeatureGates {
 		kv := strings.SplitN(fg, "=", 2)
-		if len(kv) == 2 {
-			featureGates[kv[0]], _ = strconv.ParseBool(kv[1])
-		} else {
+		if len(kv) != 2 {
 			return nil, fmt.Errorf("invalid feature gate: %s", fg)
 		}
+		v, err := strconv.ParseBool(kv[1])
+		if err != nil {
+			return nil, fmt.Errorf("invalid feature gate: %s: %w", fg, err)
+		}
+		featureGates[kv[0]] = v
 	}
 
 	runtimeConfig := map[string]string{}
@@ -469,10 +471,8 @@ func buildKindConfigV1alpha4(conf BuildKindConfig) (*kindv1alpha4.Cluster, error
 	}
 
 	c := kindv1alpha4.Cluster{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Cluster",
-			APIVersion: "kind.x-k8s.io/v1alpha4",
-		},
+		Kind:          "Cluster",
+		APIVersion:    "kind.x-k8s.io/v1alpha4",
 		FeatureGates:  featureGates,
 		RuntimeConfig: runtimeConfig,
 
@@ -494,10 +494,8 @@ func buildKindConfigV1alpha4(conf BuildKindConfig) (*kindv1alpha4.Cluster, error
 
 func buildKubeadmConfigV1beta3(conf BuildKindConfig) (*kubeadmv1beta3.ClusterConfiguration, error) {
 	c := kubeadmv1beta3.ClusterConfiguration{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "ClusterConfiguration",
-			APIVersion: "kubeadm.k8s.io/v1beta3",
-		},
+		Kind:       "ClusterConfiguration",
+		APIVersion: "kubeadm.k8s.io/v1beta3",
 		Etcd: kubeadmv1beta3.Etcd{
 			Local: &kubeadmv1beta3.LocalEtcd{
 				DataDir: "/var/lib/etcd",
@@ -508,7 +506,7 @@ func buildKubeadmConfigV1beta3(conf BuildKindConfig) (*kubeadmv1beta3.ClusterCon
 	if len(conf.EtcdExtraArgs) > 0 {
 		c.Etcd.Local.ExtraArgs = map[string]string{}
 		for _, arg := range conf.EtcdExtraArgs {
-			c.Etcd.Local.ExtraArgs[arg.Key] = arg.Value
+			c.Etcd.Local.ExtraArgs[arg.Key] = format.ElemOrDefault(arg.Value)
 		}
 	}
 
@@ -519,7 +517,7 @@ func buildKubeadmConfigV1beta3(conf BuildKindConfig) (*kubeadmv1beta3.ClusterCon
 	if len(conf.ApiserverExtraArgs) > 0 {
 		c.APIServer.ExtraArgs = map[string]string{}
 		for _, arg := range conf.ApiserverExtraArgs {
-			c.APIServer.ExtraArgs[arg.Key] = arg.Value
+			c.APIServer.ExtraArgs[arg.Key] = format.ElemOrDefault(arg.Value)
 		}
 	}
 
@@ -539,7 +537,7 @@ func buildKubeadmConfigV1beta3(conf BuildKindConfig) (*kubeadmv1beta3.ClusterCon
 	if len(conf.ControllerManagerExtraArgs) > 0 {
 		c.ControllerManager.ExtraArgs = map[string]string{}
 		for _, arg := range conf.ControllerManagerExtraArgs {
-			c.ControllerManager.ExtraArgs[arg.Key] = arg.Value
+			c.ControllerManager.ExtraArgs[arg.Key] = format.ElemOrDefault(arg.Value)
 		}
 	}
 
@@ -559,7 +557,7 @@ func buildKubeadmConfigV1beta3(conf BuildKindConfig) (*kubeadmv1beta3.ClusterCon
 	if len(conf.SchedulerExtraArgs) > 0 {
 		c.Scheduler.ExtraArgs = map[string]string{}
 		for _, arg := range conf.SchedulerExtraArgs {
-			c.Scheduler.ExtraArgs[arg.Key] = arg.Value
+			c.Scheduler.ExtraArgs[arg.Key] = format.ElemOrDefault(arg.Value)
 		}
 	}
 

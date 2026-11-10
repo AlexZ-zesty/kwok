@@ -20,6 +20,7 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"slices"
 	"strings"
@@ -240,7 +241,7 @@ func mutationHeartbeat(flags *flagpole) {
 func mutationComponentPatches(flags *flagpole) {
 	componentPatches := make([]internalversion.ComponentPatches, 0, len(flags.ExtraArgs))
 	componentNames := make(map[string]int)
-	for i, extraArgs := range flags.ExtraArgs {
+	for _, extraArgs := range flags.ExtraArgs {
 		splitedArgs := strings.SplitN(extraArgs, "=", 3)
 		if len(splitedArgs) != 3 {
 			continue
@@ -248,7 +249,7 @@ func mutationComponentPatches(flags *flagpole) {
 		if n, ok := componentNames[splitedArgs[0]]; ok {
 			componentPatches[n].ExtraArgs = append(componentPatches[n].ExtraArgs, internalversion.ExtraArgs{
 				Key:   splitedArgs[1],
-				Value: splitedArgs[2],
+				Value: new(splitedArgs[2]),
 			})
 			continue
 		}
@@ -257,11 +258,11 @@ func mutationComponentPatches(flags *flagpole) {
 			ExtraArgs: []internalversion.ExtraArgs{
 				{
 					Key:   splitedArgs[1],
-					Value: splitedArgs[2],
+					Value: new(splitedArgs[2]),
 				},
 			},
 		})
-		componentNames[splitedArgs[0]] = i
+		componentNames[splitedArgs[0]] = len(componentPatches) - 1
 	}
 	flags.ComponentsPatches = append(flags.ComponentsPatches, componentPatches...)
 }
@@ -457,12 +458,16 @@ func runE(ctx context.Context, flags *flagpole) error {
 	}
 
 	if log.IsTerminal() && flags.Kubeconfig != "" && !rt.IsDryRun() {
-		_, _ = fmt.Fprintf(os.Stderr, `You can now use your cluster with:
+		printClusterInfoHint(os.Stderr, name)
+	}
+	return nil
+}
+
+func printClusterInfoHint(w io.Writer, name string) {
+	_, _ = fmt.Fprintf(w, `You can now use your cluster with:
 
 	kubectl cluster-info --context %s
 
 Thanks for using kwok!
-`, name)
-	}
-	return nil
+`, config.ClusterName(name))
 }

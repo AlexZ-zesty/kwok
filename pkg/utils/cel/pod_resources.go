@@ -18,7 +18,6 @@ package cel
 
 import (
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	resourcehelper "k8s.io/component-helpers/resource"
 )
 
@@ -37,26 +36,21 @@ func PodRequests(pod *corev1.Pod, useStatusResources bool) corev1.ResourceList {
 		return resourcehelper.PodRequests(pod, resourcehelper.PodResourcesOptions{})
 	}
 
-	// PodRequests uses the maximum of desired and status resources while a resize
-	// is pending. For node allocation accounting, status resources represent the
-	// current allocation and spec is only a fallback when status is unavailable.
+	// Materialize current requests before aggregation: status values override
+	// desired values, with spec as the fallback for missing resource names.
+	// Only restartable init containers use status resources.
 	pod = pod.DeepCopy()
 	useCurrentContainerRequests(pod.Spec.Containers, pod.Status.ContainerStatuses, false)
 	useCurrentContainerRequests(pod.Spec.InitContainers, pod.Status.InitContainerStatuses, true)
-	if pod.Spec.Resources != nil && (pod.Status.Resources != nil || len(pod.Status.AllocatedResources) != 0) {
-		if pod.Status.Resources == nil {
-			pod.Status.Resources = &corev1.ResourceRequirements{}
+	if pod.Spec.Resources != nil {
+		var actuated corev1.ResourceList
+		if pod.Status.Resources != nil {
+			actuated = pod.Status.Resources.Requests
 		}
-		if pod.Spec.Resources.Requests == nil {
-			pod.Spec.Resources.Requests = corev1.ResourceList{}
-		}
-		zeroCurrentResourceNames(pod.Spec.Resources.Requests, pod.Status.Resources.Requests, pod.Status.AllocatedResources)
+		pod.Spec.Resources.Requests = currentResourceRequests(pod.Spec.Resources.Requests, actuated, pod.Status.AllocatedResources)
 	}
 
-	return resourcehelper.PodRequests(pod, resourcehelper.PodResourcesOptions{
-		UseStatusResources: true,
-		InPlacePodLevelResourcesVerticalScalingEnabled: true,
-	})
+	return resourcehelper.PodRequests(pod, resourcehelper.PodResourcesOptions{})
 }
 
 func useCurrentContainerRequests(containers []corev1.Container, statuses []corev1.ContainerStatus, restartableOnly bool) {
@@ -69,35 +63,27 @@ func useCurrentContainerRequests(containers []corev1.Container, statuses []corev
 			continue
 		}
 		status, ok := statusByName[containers[i].Name]
-		if ok && (status.Resources != nil || len(status.AllocatedResources) != 0) {
-			if status.Resources == nil {
-				for j := range statuses {
-					if statuses[j].Name == status.Name {
-						statuses[j].Resources = &corev1.ResourceRequirements{}
-						status = statuses[j]
-						break
-					}
-				}
+		if ok {
+			var actuated corev1.ResourceList
+			if status.Resources != nil {
+				actuated = status.Resources.Requests
 			}
-			removeCurrentResourceNames(containers[i].Resources.Requests, status.Resources.Requests, status.AllocatedResources)
+			containers[i].Resources.Requests = currentResourceRequests(containers[i].Resources.Requests, actuated, status.AllocatedResources)
 		}
 	}
 }
 
-func removeCurrentResourceNames(spec, actuated, allocated corev1.ResourceList) {
-	for name := range actuated {
-		delete(spec, name)
+func currentResourceRequests(spec, actuated, allocated corev1.ResourceList) corev1.ResourceList {
+	if spec == nil && (len(actuated) != 0 || len(allocated) != 0) {
+		spec = corev1.ResourceList{}
 	}
-	for name := range allocated {
-		delete(spec, name)
+	for name, quantity := range actuated {
+		spec[name] = quantity.DeepCopy()
 	}
-}
-
-func zeroCurrentResourceNames(spec, actuated, allocated corev1.ResourceList) {
-	for name := range actuated {
-		spec[name] = resource.Quantity{}
+	for name, quantity := range allocated {
+		if current, ok := actuated[name]; !ok || quantity.Cmp(current) > 0 {
+			spec[name] = quantity.DeepCopy()
+		}
 	}
-	for name := range allocated {
-		spec[name] = resource.Quantity{}
-	}
+	return spec
 }
